@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="shortcut icon" href="https://img.icons8.com/?size=100&id=QM0dP5g8D4UH&format=png&color=000000" type="image/x-icon">
+    <title>Метод Гауса </title>
+    <style>
+        body {
+            font-family: cursive;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #040D0F;
+        }
+
+        .container {
+            text-align: center;
+            background-color: #319CB5;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            width: 60%;
+        }
+
+        textarea {
+            width: 90%;
+            height: 100px;
+            margin-bottom: 20px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 15px;
+            font-size: 16px;
+            background-color: #03181F;
+            color: #ddd;
+        }
+
+        button {
+            padding: 10px 20px;
+            background-color: #CCF5FE;
+            color: black;
+            border: none;
+            border-radius: 15px;
+            width: 92%;
+            cursor: pointer;
+            font-size: 16px;
+            font-family: cursive;
+        }
+
+
+        button:hover {
+            background-color:  #319CB5;
+            border: #040D0F 1px;
+        }
+
+        .result {
+            margin-top: 20px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            color: #ddd;
+            background-color: #03181F;
+            border-radius: 15px;
+            font-size: 16px;
+            width: 90%;
+            margin-bottom: 20px;
+            margin-left: 30px;
+            margin-right: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Розв'язування системи рівнянь методом Гауса</h1>
+        <p>Введіть рівняння у форматі: <code>2x + y - z = 8</code>, кожне рівняння з нового рядка. </p>
+        <textarea id="inputEquations" placeholder="Введіть систему рівнянь"></textarea>
+        <button id="solveButton">Розв'язати</button>
+        <div class="result" id="resultDiv"></div>
+    </div>
+
+    <script>
+        function parseEquations(equations) {
+            const matrix = [];
+            const regex = /([+-]?\d*)\s*([a-zA-Z])/g;
+
+            equations.trim().split("\n").forEach(line => {
+                const terms = [];
+                let freeTerm = 0;
+                let matches;
+
+                while ((matches = regex.exec(line)) !== null) {
+                    const coefficient = matches[1] === "" || matches[1] === "+" ? 1 : 
+                                        matches[1] === "-" ? -1 : parseFloat(matches[1]);
+                    terms.push(coefficient);
+                }
+
+                const freeMatch = line.match(/=\s*([+-]?\d+)/);
+                if (freeMatch) {
+                    freeTerm = parseFloat(freeMatch[1]);
+                }
+
+                terms.push(freeTerm);
+                matrix.push(terms);
+            });
+
+            return matrix;
+        }
+
+        function gaussSolve(matrix) {
+            const n = matrix.length;
+
+            for (let i = 0; i < n; i++) {
+              
+                let maxRow = i;
+                for (let k = i + 1; k < n; k++) {
+                    if (Math.abs(matrix[k][i]) > Math.abs(matrix[maxRow][i])) {
+                        maxRow = k;
+                    }
+                }
+
+                [matrix[i], matrix[maxRow]] = [matrix[maxRow], matrix[i]];
+
+                const divisor = matrix[i][i];
+                for (let j = i; j <= n; j++) {
+                    matrix[i][j] /= divisor;
+                }
+
+                for (let k = i + 1; k < n; k++) {
+                    const factor = matrix[k][i];
+                    for (let j = i; j <= n; j++) {
+                        matrix[k][j] -= factor * matrix[i][j];
+                    }
+                }
+            }
+
+            const result = Array(n).fill(0);
+            for (let i = n - 1; i >= 0; i--) {
+                result[i] = matrix[i][n];
+                for (let j = i + 1; j < n; j++) {
+                    result[i] -= matrix[i][j] * result[j];
+                }
+            }
+
+            return result;
+        }
+
+        function solveSystem() {
+            const input = document.getElementById("inputEquations").value;
+            const resultDiv = document.getElementById("resultDiv");
+
+            if (!input.trim()) {
+                resultDiv.innerHTML = "Введіть систему рівнянь!";
+                return;
+            }
+
+            try {
+                const matrix = parseEquations(input);
+                const solution = gaussSolve(matrix);
+                resultDiv.innerHTML = `
+                    <h3>Розв'язок:</h3>
+                    <p>${solution.map((x, i) => `x<sub>${i + 1}</sub> = ${x.toFixed(4)}`).join("<br>")}</p>
+                `;
+            } catch (e) {
+                resultDiv.innerHTML = "Помилка під час обчислення: перевірте вхідні дані.";
+            }
+        }
+
+        document.getElementById("solveButton").addEventListener("click", solveSystem);
+    </script>
+</body>
+</html>
